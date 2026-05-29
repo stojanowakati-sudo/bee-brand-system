@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Билайн · Бренд-архитектура · Full System</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--y:#FFD507;--y2:#FFE84D;--y3:#FFF5B0;--b:#0D0D0D;--b2:#1C1C1C;--b3:#2E2E2E;--w:#FFFFFF;--g:#F4F4F2;--g2:#E6E6E2;--g3:#CDCDC8;--t:#1A1A1A;--t2:#5C5C58;--t3:#9A9A95;--red:#E53935;--green:#2E7D32;--r:12px;--r2:8px;}
+html{scroll-behavior:smooth}
+body{font-family:'IBM Plex Sans','Helvetica Neue',Arial,sans-serif;background:var(--g);color:var(--t);min-height:100vh;font-size:14px;line-height:1.5}
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;flex-shrink:0;background:var(--b);position:sticky;top:0;height:100vh;overflow-y:auto;padding:0 0 32px;scrollbar-width:thin;scrollbar-color:var(--b3) var(--b)}
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-track{background:var(--b)}.sidebar::-webkit-scrollbar-thumb{background:var(--b3);border-radius:2px}
+.sidebar-header{padding:24px 20px 20px;border-bottom:1px solid var(--b3);margin-bottom:8px}
+.sb-logo{width:38px;height:38px;background:var(--y);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--b);margin-bottom:10px}
+.sb-brand{font-size:14px;font-weight:700;color:var(--w)}.sb-sub{font-size:10px;color:var(--t3);margin-top:1px}
+.sb-section{font-size:9px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--t3);padding:14px 20px 5px;display:block}
+.sb-link{display:flex;align-items:center;gap:8px;padding:8px 20px;font-size:11.5px;color:rgba(255,255,255,.5);cursor:pointer;transition:all .15s;border-left:2px solid transparent;text-decoration:none;line-height:1.3}
+.sb-link:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.04)}.sb-link.active{color:var(--w);border-left-color:var(--y);background:rgba(255,213,7,.07)}
+.sb-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.15);flex-shrink:0}.sb-link.active .sb-dot{background:var(--y)}
+.main{flex:1;min-width:0;padding:40px 48px 80px;max-width:980px}
+.section{display:none}.section.active{display:block}
+.page-eyebrow{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.page-title{font-size:30px;font-weight:700;letter-spacing:-.4px;line-height:1.15;margin-bottom:8px}
+.page-title em{font-style:normal;color:var(--y);background:var(--b);padding:0 5px;border-radius:4px}
+.page-subtitle{font-size:14px;color:var(--t2);max-width:640px;line-height:1.7;margin-bottom:32px}
+.card{background:var(--w);border:1px solid var(--g2);border-radius:var(--r);padding:24px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:700;margin-bottom:4px}.card-sub{font-size:12px;color:var(--t2);margin-bottom:16px;line-height:1.6}
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.3px;padding:3px 9px;border-radius:20px}
+.badge-y{background:var(--y);color:var(--b)}.badge-b{background:var(--b);color:var(--y)}.badge-g{background:var(--g);border:1px solid var(--g2);color:var(--t2)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 10px;border-radius:20px;background:var(--g);border:1px solid var(--g2);color:var(--t2);margin:2px}
+.chip.yes{background:#E8F5E9;border-color:#A5D6A7;color:#2E7D32}.chip.no{background:#FDECEA;border-color:#F5B8B5;color:#C62828}.chip.warn{background:#FFF9E0;border-color:#FFE57F;color:#6D4C00}.chip.black{background:var(--b);color:var(--y);border-color:var(--b)}
+.process-chain{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:24px}
+.pc-step{flex:1;min-width:80px;background:var(--w);border:1px solid var(--g2);border-radius:var(--r2);padding:14px 12px;text-align:center;cursor:pointer;transition:all .15s}
+.pc-step:hover,.pc-step.hl{background:var(--y);border-color:var(--y)}.pc-step.hl .pc-n,.pc-step.hl .pc-lbl{color:var(--b)}
+.pc-n{font-size:9px;font-weight:700;color:var(--t3);margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}.pc-ico{font-size:22px;margin-bottom:6px}.pc-lbl{font-size:11px;font-weight:600;color:var(--t);line-height:1.3}
+.pc-hint{background:var(--b);color:var(--w);border-radius:var(--r2);padding:16px 20px;font-size:13px;line-height:1.7;min-height:60px}
+.levels-ladder{display:flex;flex-direction:column;gap:10px}
+.level-row{display:flex;align-items:stretch;gap:12px;border-radius:var(--r);overflow:hidden;border:1px solid var(--g2);background:var(--w);cursor:pointer;transition:border-color .15s}
+.level-row:hover{border-color:var(--y)}
+.level-num{width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700}
+.l0 .level-num{background:#EBEBEB;color:#888}.l1 .level-num{background:var(--y3);color:#7A5F00}.l2 .level-num{background:#FFE566;color:#5A3D00}.l3 .level-num{background:var(--y);color:var(--b)}.l4 .level-num{background:var(--b);color:var(--y)}
+.level-body{padding:14px 16px;flex:1}.level-name{font-size:14px;font-weight:700;margin-bottom:4px}.level-desc{font-size:12px;color:var(--t2);margin-bottom:8px;line-height:1.5}
+.level-detail{padding-top:10px;border-top:1px solid var(--g2);font-size:12px;line-height:1.6;color:var(--t2);display:none}.level-detail.open{display:block}
+.mtable{width:100%;border-collapse:collapse;font-size:11px}
+.mtable th{padding:9px 8px;font-size:9.5px;font-weight:700;background:var(--b);color:var(--w);text-align:center;border:1px solid #333;white-space:nowrap}
+.mtable th.lh{text-align:left;padding-left:12px;min-width:90px}.mtable td{padding:9px 8px;text-align:center;border:1px solid var(--g2);font-size:12px}
+.mtable td.lh{text-align:left;padding-left:12px;font-weight:700;font-size:11px;background:var(--g)}.mtable tr:hover td{background:#FFFCE6}.mtable tr:hover td.lh{background:var(--g)}
+.v-ok{color:#2E7D32}.v-no{color:#C62828}.v-w{color:#E65100}.v-i{color:#0277BD}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.role-card{background:var(--w);border:1px solid var(--g2);border-radius:var(--r);padding:16px;border-top:3px solid var(--g2);cursor:pointer;transition:border-top-color .15s}
+.role-card:hover{border-top-color:var(--y)}.rc-tag{font-size:9px;font-weight:700;letter-spacing:.5px;color:var(--t3);text-transform:uppercase;margin-bottom:6px}
+.rc-formula{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;background:var(--b);color:var(--y);display:inline-block;padding:3px 10px;border-radius:4px;margin-bottom:8px}
+.rc-title{font-size:13px;font-weight:700;margin-bottom:6px}.rc-body{font-size:11.5px;color:var(--t2);line-height:1.55}
+.score-section{margin-bottom:24px}.score-section-title{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sc{background:var(--w);border:1px solid var(--g2);border-radius:var(--r);padding:14px}
+.sc-num{font-size:20px;font-weight:700;background:var(--b);color:var(--y);display:inline-block;padding:0 8px;border-radius:4px;margin-bottom:6px;font-family:'IBM Plex Mono',monospace}
+.sc-name{font-size:13px;font-weight:700;margin-bottom:4px}.sc-hint{font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:10px}
+.sc-slider{width:100%;accent-color:var(--y);cursor:pointer}.sc-slider-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}.sc-val{font-size:13px;font-weight:700;min-width:18px;text-align:right}
+.sc-pips{display:flex;gap:3px}.sc-pip{flex:1;height:4px;border-radius:2px;background:var(--g2);transition:background .15s}.sc-pip.on{background:var(--y)}
+.score-result-panel{background:var(--b);color:var(--w);border-radius:var(--r);padding:20px 24px;margin-top:20px}
+.srp-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.srp-bar-wrap{flex:1;min-width:80px;height:6px;background:rgba(255,255,255,.1);border-radius:3px}.srp-bar{height:6px;border-radius:3px;background:var(--y);transition:width .3s}
+.srp-level{font-size:22px;font-weight:700;color:var(--y)}.srp-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;line-height:1.5}
+.dt-step{border:1px solid var(--g2);border-radius:var(--r);margin-bottom:10px;overflow:hidden;animation:fadeUp .2s ease}
+.dt-step.active-step{border:2px solid var(--b)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.dt-qhead{background:var(--b);padding:14px 18px;display:flex;align-items:center;gap:10px}
+.dt-qn{width:28px;height:28px;border-radius:7px;background:var(--y);color:var(--b);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.dt-qtext{font-size:14px;font-weight:700;color:var(--w);line-height:1.3}.dt-why{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.dt-opts{padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:var(--w)}
+.dt-opt{padding:12px 14px;border:1px solid var(--g2);border-radius:var(--r2);cursor:pointer;font-size:13px;font-weight:500;background:var(--g);color:var(--t);text-align:left;transition:all .15s;display:flex;align-items:flex-start;gap:10px;line-height:1.4}
+.dt-opt:hover{background:var(--y);border-color:var(--y);color:var(--b)}.dt-opt.sel{background:var(--y);border-color:var(--y);color:var(--b);font-weight:700;pointer-events:none}
+.opt-ico{font-size:16px;flex-shrink:0;margin-top:1px}
+.dt-hist-step{border:1px solid var(--g2);border-radius:var(--r2);margin-bottom:8px;overflow:hidden}
+.dt-hist-head{background:var(--g);padding:9px 14px;display:flex;align-items:center;gap:8px}
+.dt-hist-n{width:20px;height:20px;border-radius:4px;background:var(--g2);color:var(--t2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.dt-hist-q{font-size:11px;font-weight:600;color:var(--t2)}.dt-hist-ans{padding:8px 14px 10px;display:flex;flex-wrap:wrap;gap:6px}
+.result-box{background:var(--b);border-radius:var(--r);padding:22px 24px;animation:fadeUp .3s ease;margin-bottom:12px}
+.rb-eyebrow{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:8px}
+.rb-level{font-size:26px;font-weight:700;color:var(--y);line-height:1.15;margin-bottom:4px}.rb-name{font-size:15px;font-weight:700;color:var(--w);margin-bottom:10px}
+.rb-body{font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:14px}
+.rb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.rb-chip{font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.12)}
+.rb-chip.hi{background:rgba(255,213,7,.15);color:var(--y);border-color:rgba(255,213,7,.3)}
+.rb-approval{font-size:11px;color:rgba(255,255,255,.35);margin-bottom:14px}.rb-approval span{color:rgba(255,255,255,.75);font-weight:700}
+.rb-btns{display:flex;gap:8px;flex-wrap:wrap}
+.rbb{font-size:12px;font-weight:700;padding:9px 16px;border-radius:var(--r2);cursor:pointer;border:none;transition:all .15s}
+.rbb.p{background:var(--y);color:var(--b)}.rbb.p:hover{background:var(--y2)}.rbb.s{background:rgba(255,255,255,.08);color:var(--w);border:1px solid rgba(255,255,255,.15)}.rbb.s:hover{background:rgba(255,255,255,.14)}
+.dt-progress{display:flex;gap:4px;margin-bottom:12px}
+.dtp{flex:1;height:3px;border-radius:2px;background:var(--g2);transition:background .2s}.dtp.done{background:var(--y)}.dtp.cur{background:var(--b)}
+.dt-bc{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;min-height:28px}
+.bc-pill{font-size:11px;padding:4px 10px;border-radius:20px;background:var(--g);border:1px solid var(--g2);color:var(--t2);display:flex;align-items:center;gap:4px}
+.bc-sep{color:var(--g3);font-size:10px}
+.dt-back{font-size:11px;padding:6px 14px;border:1px solid var(--g2);border-radius:20px;cursor:pointer;background:var(--w);color:var(--t2);margin-top:4px;display:inline-block;transition:all .15s}
+.dt-back:hover{background:var(--g)}
+.stop-list{list-style:none}
+.stop-item{display:flex;align-items:flex-start;gap:14px;padding:13px 0;border-bottom:1px solid var(--g2);cursor:pointer}
+.stop-item:last-child{border-bottom:none}
+.stop-cb{width:22px;height:22px;border-radius:5px;border:1.5px solid var(--g2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s;margin-top:1px}
+.stop-cb.chk{background:var(--red);border-color:var(--red);color:var(--w)}.stop-text{font-size:13px;line-height:1.5}
+.stop-alert{background:var(--red);color:var(--w);border-radius:var(--r);padding:14px 18px;font-size:13px;font-weight:600;margin-top:14px;display:none;line-height:1.5}
+.stop-alert.show{display:block}
+.alt-table,.gloss-table,.risk-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.alt-table th,.gloss-table th,.risk-table th{text-align:left;padding:9px 12px;font-size:9.5px;font-weight:700;background:var(--b);color:var(--w);border:1px solid #333;letter-spacing:.3px}
+.alt-table td,.gloss-table td,.risk-table td{padding:10px 12px;border:1px solid var(--g2);vertical-align:top;line-height:1.55}
+.alt-table tr:hover td,.gloss-table tr:hover td,.risk-table tr:hover td{background:var(--y3)}
+.alt-table td:first-child,.gloss-table td:first-child{font-weight:700;background:var(--g)}
+.reg-wrap{overflow-x:auto}
+.rtable{width:100%;border-collapse:collapse;font-size:11px;min-width:900px}
+.rtable th{text-align:left;padding:9px 10px;font-size:9.5px;font-weight:700;background:var(--b);color:var(--w);border:1px solid #333;white-space:nowrap}
+.rtable td{padding:9px 10px;border:1px solid var(--g2);vertical-align:middle}
+.rtable tr:hover td{background:var(--y3)}
+.lbadge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.lb0{background:#EBEBEB;color:#777}.lb1{background:var(--y3);color:#7A5F00}.lb2{background:#FFE566;color:#5A3D00}.lb3{background:var(--y);color:var(--b)}.lb4{background:var(--b);color:var(--y)}
+.s-act{color:#2E7D32;font-weight:700}.s-tmp{color:#E65100;font-weight:700}.s-arch{color:var(--t3);font-weight:700}
+.bp-filter{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.bp-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:var(--r2);background:var(--g);border:1px solid var(--g2);cursor:pointer;transition:all .15s}
+.bp-item.pass{background:#E8F5E9;border-color:#A5D6A7}.bp-item.fail{background:#FDECEA;border-color:#F5B8B5}
+.bp-num{width:22px;height:22px;border-radius:5px;background:var(--g2);color:var(--t2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.bp-item.pass .bp-num{background:var(--green);color:var(--w)}.bp-item.fail .bp-num{background:var(--red);color:var(--w)}.bp-text{font-size:13px;line-height:1.5}
+.bp-result{border-radius:var(--r);padding:16px 20px;margin-top:4px;font-size:13px;font-weight:600;border:2px solid transparent}
+.bp-pass{background:#E8F5E9;border-color:#A5D6A7;color:var(--green)}.bp-warn{background:#FFF9E0;border-color:#FFE57F;color:#6D4C00}.bp-fail{background:#FDECEA;border-color:#F5B8B5;color:var(--red)}
+.principles-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pr-card{background:var(--w);border-radius:var(--r);border-left:3px solid var(--y);padding:16px;border:1px solid var(--g2)}
+.pr-card{border-left:3px solid var(--y)}
+.pr-n{font-size:9px;font-weight:700;letter-spacing:.5px;color:var(--t3);margin-bottom:5px;text-transform:uppercase}.pr-title{font-size:13px;font-weight:700;margin-bottom:6px;line-height:1.3}.pr-body{font-size:11.5px;color:var(--t2);line-height:1.55}
+.roadmap{display:flex;flex-direction:column;gap:10px}
+.rm-phase{background:var(--w);border:1px solid var(--g2);border-radius:var(--r);overflow:hidden;cursor:pointer}
+.rm-head{padding:14px 18px;display:flex;align-items:center;gap:12px;background:var(--g)}
+.rm-phase-badge{font-size:10px;font-weight:700;background:var(--b);color:var(--y);padding:3px 9px;border-radius:4px;font-family:'IBM Plex Mono',monospace;flex-shrink:0}
+.rm-phase-title{font-size:14px;font-weight:700;flex:1}.rm-phase-sub{font-size:11px;color:var(--t2)}.rm-arr{font-size:14px;color:var(--t3);transition:transform .2s}.rm-arr.open{transform:rotate(180deg)}
+.rm-body{padding:0 18px;max-height:0;overflow:hidden;transition:max-height .3s,padding .2s}.rm-body.open{max-height:400px;padding:14px 18px}
+.rm-steps{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rm-step{background:var(--g);border-radius:var(--r2);padding:10px 12px;font-size:11px}
+.rm-step-num{font-size:9px;font-weight:700;color:var(--t3);margin-bottom:3px}.rm-step-title{font-size:12px;font-weight:700;margin-bottom:3px}.rm-step-art{font-size:10.5px;color:var(--t2)}
+.lm-card{border:1px solid var(--g2);border-radius:var(--r);margin-bottom:8px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.lm-card:hover{border-color:var(--y)}
+.lm-head{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--g)}
+.lm-num{width:28px;height:28px;border-radius:6px;background:var(--y);color:var(--b);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.lm-title{font-size:13px;font-weight:700;flex:1}.lm-arr{font-size:13px;color:var(--t3);transition:transform .2s}.lm-arr.open{transform:rotate(180deg)}
+.lm-body{padding:0 16px;max-height:0;overflow:hidden;transition:max-height .3s,padding .2s}.lm-body.open{max-height:400px;padding:14px 16px}
+.lm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px}.lm-fl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}.lm-fv{font-size:12px;color:var(--t)}
+.appr-tag{display:inline-block;background:var(--y);color:var(--b);border-radius:5px;font-size:11px;font-weight:700;padding:3px 10px;margin-top:8px}
+.blueprint{overflow-x:auto;margin-bottom:20px}
+.bp-table{width:100%;border-collapse:collapse;font-size:11px;min-width:780px}
+.bp-table th{padding:9px 10px;font-size:9.5px;font-weight:700;background:var(--b);color:var(--w);border:1px solid #333;text-align:left;white-space:nowrap}
+.bp-table td{padding:9px 10px;border:1px solid var(--g2);vertical-align:top;font-size:11px;line-height:1.5}
+.bp-table td.step-n{font-weight:700;text-align:center;background:var(--g)}
+.bp-table td.user{background:#E3F2FD}.bp-table td.sys{background:#FFF9E0}.bp-table td.csb{background:#E8F5E9}.bp-table td.result{background:#F3E5F5}
+@media(max-width:768px){.sidebar{display:none}.main{padding:20px 16px 60px}.role-grid,.principles-grid,.score-grid{grid-template-columns:1fr}.rm-steps{grid-template-columns:1fr}}
+</style>
+<style>
+#pw-screen{position:fixed;inset:0;background:#0D0D0D;z-index:99999;display:flex;align-items:center;justify-content:center;}
+.pw-box{width:100%;max-width:360px;padding:40px 36px;}
+.pw-logo{width:48px;height:48px;border-radius:50%;background:#FFD507;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#0D0D0D;margin-bottom:20px;}
+.pw-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:-.3px;}
+.pw-sub{font-size:13px;color:rgba(255,255,255,.4);margin-bottom:28px;line-height:1.5;}
+.pw-input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:13px 16px;color:#fff;font-size:14px;outline:none;border-radius:0;font-family:inherit;transition:border-color .15s;letter-spacing:.1em;}
+.pw-input:focus{border-color:#FFD507;}
+.pw-input::placeholder{color:rgba(255,255,255,.25);letter-spacing:0;}
+.pw-btn{width:100%;margin-top:10px;padding:13px;background:#FFD507;color:#0D0D0D;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:background .15s;}
+.pw-btn:hover{background:#FFE84D;}
+.pw-error{margin-top:10px;font-size:12px;color:#E53935;display:none;}
+.pw-error.show{display:block;}
+</style>
+</head><body>
+<div class="app">
+<nav class="sidebar">
+<div class="sidebar-header"><div class="sb-logo">B</div><div class="sb-brand">Билайн</div><div class="sb-sub">Бренд-архитектура 2.0</div></div>
+<span class="sb-section">Система</span>
+<a class="sb-link active" onclick="go('s_logic',this)"><div class="sb-dot"></div>01 · Логика системы</a>
+<a class="sb-link" onclick="go('s_gloss',this)"><div class="sb-dot"></div>02 · Глоссарий</a>
+<a class="sb-link" onclick="go('s_types',this)"><div class="sb-dot"></div>03 · Типология сущностей</a>
+<span class="sb-section">Архитектура</span>
+<a class="sb-link" onclick="go('s_levels',this)"><div class="sb-dot"></div>04 · Уровни брендирования</a>
+<a class="sb-link" onclick="go('s_matrix',this)"><div class="sb-dot"></div>05 · Матрица атрибутов</a>
+<a class="sb-link" onclick="go('s_roles',this)"><div class="sb-dot"></div>06 · Роль Билайна</a>
+<a class="sb-link" onclick="go('s_models',this)"><div class="sb-dot"></div>07 · Логотипные модели</a>
+<span class="sb-section">Инструменты</span>
+<a class="sb-link" onclick="go('s_score',this)"><div class="sb-dot"></div>08 · Скоринг-модель</a>
+<a class="sb-link" onclick="go('s_dt',this)"><div class="sb-dot"></div>09 · Decision tree</a>
+<a class="sb-link" onclick="go('s_stop',this)"><div class="sb-dot"></div>10 · Стоп-факторы</a>
+<a class="sb-link" onclick="go('s_alt',this)"><div class="sb-dot"></div>11 · Вместо логотипа</a>
+<a class="sb-link" onclick="go('s_bp',this)"><div class="sb-dot"></div>12 · Билайн за офлайн</a>
+<span class="sb-section">Управление</span>
+<a class="sb-link" onclick="go('s_reg',this)"><div class="sb-dot"></div>13 · Реестр сущностей</a>
+<a class="sb-link" onclick="go('s_risks',this)"><div class="sb-dot"></div>14 · Риски системы</a>
+<a class="sb-link" onclick="go('s_principles',this)"><div class="sb-dot"></div>15 · Принципы</a>
+<a class="sb-link" onclick="go('s_platform',this)"><div class="sb-dot"></div>16 · IT-платформа</a>
+<a class="sb-link" onclick="go('s_roadmap',this)"><div class="sb-dot"></div>17 · Roadmap</a>
+</nav>
+<main class="main">
+
+<!-- ═══════════════════════════════════════════════ SECTIONS ═══ -->
+
+<!-- 01 LOGIC -->
+<div class="section active" id="s_logic">
+<div class="page-eyebrow">Система · Блок 01</div>
+<div class="page-title">Логика <em>системы</em></div>
+<div class="page-subtitle">Мы не создаём логотипы по запросу. Мы определяем статус сущности и подбираем безопасный уровень брендирования внутри архитектуры Билайна.</div>
+<div class="card">
+<div class="card-title">10 шагов принятия решения</div>
+<div class="card-sub">Нажмите на шаг — увидите детали.</div>
+<div class="process-chain" id="process-chain"></div>
+<div class="pc-hint" id="pc-hint">Нажмите на любой шаг.</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:4px;">
+<div class="card" style="margin-bottom:0;border-top:3px solid var(--y);">
+<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Ключевой принцип</div>
+<div style="font-size:13px;line-height:1.6;font-weight:500;">Логотип — исключение, а не базовое право. Внешняя видимость не является основанием для отдельного логотипа.</div>
+</div>
+<div class="card" style="margin-bottom:0;border-top:3px solid var(--b);">
+<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Структура ≠ Бренд</div>
+<div style="font-size:13px;line-height:1.6;font-weight:500;">Факт существования отдела, функции или направления не означает права на отдельный логотип.</div>
+</div>
+<div class="card" style="margin-bottom:0;background:var(--b);border-color:var(--b);">
+<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Что создаёт бренд</div>
+<div style="font-size:13px;line-height:1.6;font-weight:700;color:var(--y);">Роль · УЦП · Аудитория · Долгосрочность · Носители · Владелец · Ресурсы</div>
+</div>
+</div>
+</div>
+
+<!-- 02 GLOSS -->
+<div class="section" id="s_gloss">
+<div class="page-eyebrow">Система · Блок 02</div>
+<div class="page-title">Глоссарий</div>
+<div class="page-subtitle">Единый язык для работы с бренд-архитектурой Билайна. 20 ключевых понятий.</div>
+<div style="overflow-x:auto;"><table class="gloss-table" id="gloss-table"></table></div>
+</div>
+
+<!-- 03 TYPES -->
+<div class="section" id="s_types">
+<div class="page-eyebrow">Система · Блок 03</div>
+<div class="page-title">Типология сущностей</div>
+<div class="page-subtitle">13 категорий сущностей. Каждая — со своими правилами и допустимым уровнем брендирования.</div>
+<div style="overflow-x:auto;"><table id="types-table" style="width:100%;border-collapse:collapse;font-size:11px;min-width:860px;"></table></div>
+</div>
+
+<!-- 04 LEVELS -->
+<div class="section" id="s_levels">
+<div class="page-eyebrow">Архитектура · Блок 04</div>
+<div class="page-title">Уровни брендирования</div>
+<div class="page-subtitle">5 уровней. Чем выше — тем строже требования. Нажмите для раскрытия деталей.</div>
+<div class="levels-ladder" id="levels-ladder"></div>
+</div>
+
+<!-- 05 MATRIX -->
+<div class="section" id="s_matrix">
+<div class="page-eyebrow">Архитектура · Блок 05</div>
+<div class="page-title">Матрица атрибутов</div>
+<div class="page-subtitle">Что разрешено на каждом уровне. Атрибуты выбираются из утверждённой библиотеки — не придумываются заново.</div>
+<div style="overflow-x:auto;margin-bottom:12px;"><table class="mtable" id="matrix-table"></table></div>
+<div class="card" style="border-left:3px solid var(--y);"><div style="font-size:12px;line-height:1.65;color:var(--t2);"><strong>Важно:</strong> Дополнительные цвета, паттерны, дизайн-элементы и фотостиль выбираются из <strong>утверждённой библиотеки допустимой дифференциации</strong> — не придумываются каждым направлением заново.</div></div>
+</div>
+
+<!-- 06 ROLES -->
+<div class="section" id="s_roles">
+<div class="page-eyebrow">Архитектура · Блок 06</div>
+<div class="page-title">Роль Билайна в проекте</div>
+<div class="page-subtitle">Прежде чем выбрать уровень — определи, какую роль играет Билайн. От этого зависит вся визуальная модель.</div>
+<div class="role-grid" id="role-grid"></div>
+</div>
+
+<!-- 07 MODELS -->
+<div class="section" id="s_models">
+<div class="page-eyebrow">Архитектура · Блок 07</div>
+<div class="page-title">Логотипные и связующие модели</div>
+<div class="page-subtitle">11 допустимых моделей. Нажмите для раскрытия деталей.</div>
+<div id="logo-models"></div>
+</div>
+
+<!-- 08 SCORING -->
+<div class="section" id="s_score">
+<div class="page-eyebrow">Инструменты · Блок 08</div>
+<div class="page-title">Скоринг-модель</div>
+<div class="page-subtitle">Два блока критериев. Обязательные — минимальный порог. Усиливающие — дополнительные основания. Двигайте слайдеры.</div>
+<div id="score-container"></div>
+</div>
+
+<!-- 09 DT -->
+<div class="section" id="s_dt">
+<div class="page-eyebrow">Инструменты · Блок 09</div>
+<div class="page-title">Decision Tree</div>
+<div class="page-subtitle">15 шагов. Ответьте последовательно — получите рекомендацию по уровню брендирования.</div>
+<div id="dt-container"></div>
+<div class="result-box" id="dt-result" style="display:none;"></div>
+<button class="dt-back" onclick="resetDT()" style="display:none;margin-top:12px;" id="dt-reset-btn">↺ Начать заново</button>
+</div>
+
+<!-- 10 STOP -->
+<div class="section" id="s_stop">
+<div class="page-eyebrow">Инструменты · Блок 10</div>
+<div class="page-title">Стоп-факторы</div>
+<div class="page-subtitle">Если есть хотя бы один — отдельный логотип не создаётся. Нажмите для отметки.</div>
+<div class="card">
+<div class="card-title">Чек-лист стоп-факторов</div>
+<div class="card-sub">При любом отмеченном пункте — логотип не создаётся.</div>
+<ul class="stop-list" id="stop-list"></ul>
+<div class="stop-alert" id="stop-alert">⛔ Обнаружен стоп-фактор. Логотип не создаётся. Используйте шаблон, плашку, key visual или co-branding-модуль. Обратитесь в Центр стандартов бренда.</div>
+</div>
+<div class="card" style="border-left:3px solid var(--b);margin-top:0;">
+<div style="font-size:12px;line-height:1.8;color:var(--t2);">
+<strong>«Логотип появляется только там, где сущность должна жить и накапливать капитал отдельно от конкретного носителя»</strong><br>
+<strong>«Внешнее размещение материала не является основанием для создания отдельного логотипа»</strong><br>
+<strong>«Если задачу можно решить шаблоном, плашкой, key visual или co-branding-модулем — отдельный логотип не создаётся»</strong>
+</div>
+</div>
+</div>
+
+<!-- 11 ALT -->
+<div class="section" id="s_alt">
+<div class="page-eyebrow">Инструменты · Блок 11</div>
+<div class="page-title">Вместо логотипа</div>
+<div class="page-subtitle">Для большинства задач есть правильный инструмент — без создания нового логотипа.</div>
+<div style="overflow-x:auto;"><table class="alt-table" id="alt-table"></table></div>
+</div>
+
+<!-- 12 BP -->
+<div class="section" id="s_bp">
+<div class="page-eyebrow">Инструменты · Блок 12</div>
+<div class="page-title">Билайн <em>за офлайн</em></div>
+<div class="page-subtitle">Не логотип для всех мероприятий. Смысловой фильтр: соответствует ли проект платформе настоящести. Нажимайте критерии.</div>
+<div class="card">
+<div class="card-title">Фильтр «Билайн за офлайн»</div>
+<div class="card-sub">Прохождение фильтра НЕ даёт права на логотип. Оно определяет смысловую рамку и key visual.</div>
+<div class="bp-filter" id="bp-filter"></div>
+<div id="bp-result" class="bp-result" style="display:none;"></div>
+</div>
+<div style="overflow-x:auto;margin-top:16px;"><table class="alt-table" id="bp-scenarios-table"></table></div>
+</div>
+
+<!-- 13 REG -->
+<div class="section" id="s_reg">
+<div class="page-eyebrow">Управление · Блок 13</div>
+<div class="page-title">Реестр сущностей</div>
+<div class="page-subtitle">Единая база всех бренд-сущностей. Пример заполнения для 15 ключевых сущностей.</div>
+<div class="reg-wrap"><table class="rtable" id="reg-table"></table></div>
+</div>
+
+<!-- 14 RISKS -->
+<div class="section" id="s_risks">
+<div class="page-eyebrow">Управление · Блок 14</div>
+<div class="page-title">Риски и слепые зоны</div>
+<div class="page-subtitle">19 ключевых рисков. Для каждого — проблема, последствие и закрывающий артефакт.</div>
+<div style="overflow-x:auto;"><table class="risk-table" id="risk-table"></table></div>
+</div>
+
+<!-- 15 PRINCIPLES -->
+<div class="section" id="s_principles">
+<div class="page-eyebrow">Управление · Блок 15</div>
+<div class="page-title">12 принципов системы</div>
+<div class="page-subtitle">Фундамент бренд-архитектуры Билайна. Каждый принцип защищает мастер-бренд.</div>
+<div class="principles-grid" id="principles-grid"></div>
+</div>
+
+<!-- 16 PLATFORM -->
+<div class="section" id="s_platform">
+<div class="page-eyebrow">Управление · Блок 16</div>
+<div class="page-title">IT-платформа</div>
+<div class="page-subtitle">Service blueprint: 15 шагов от запроса до реестра.</div>
+<div class="blueprint"><table class="bp-table" id="platform-table"></table></div>
+</div>
+
+<!-- 17 ROADMAP -->
+<div class="section" id="s_roadmap">
+<div class="page-eyebrow">Управление · Блок 17</div>
+<div class="page-title">Roadmap внедрения</div>
+<div class="page-subtitle">5 фаз · 19 этапов · от аудита до IT-платформы. Нажмите на фазу.</div>
+<div class="roadmap" id="roadmap"></div>
+</div>
+
+</main></div>
+<script>
+function go(id,el){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));document.getElementById(id).classList.add('active');el.classList.add('active');window.scrollTo(0,0);}
+
+const CHAIN=[
+  {ico:'🔍',lbl:'Тип сущности',hint:'Определяем категорию: функция, программа, проект, мероприятие, комьюнити, зонтик, партнёрство, ДЗО. Если продуктовая — отдельный трек.'},
+  {ico:'🎭',lbl:'Роль Билайна',hint:'Владелец / Инициатор / Равноправный партнёр / Поддерживающая сторона / Технологический партнёр / Участник. Роль определяет визуальную модель.'},
+  {ico:'🧪',lbl:'Бренд-сущность?',hint:'Проверяем: роль, УЦП, аудитория, носители, долгосрочность, владелец, ресурсы. Если нет — это коммуникационный повод, а не бренд.'},
+  {ico:'🏛',lbl:'Зонтик?',hint:'Объединяет несколько программ, проектов, комьюнити? Если да — проверяем архитектуру внутри, навигационную пользу, долгосрочность.'},
+  {ico:'🎯',lbl:'Узнаваемость?',hint:'Нужно накапливать отдельную узнаваемость? Есть маркетинговая задача, регулярная коммуникация, roadmap?'},
+  {ico:'🏖',lbl:'За офлайн?',hint:'Для мероприятий и спецпроектов: проект возвращает людей в живой опыт? Фильтр определяет смысловую рамку, но НЕ даёт права на логотип.'},
+  {ico:'⚖️',lbl:'Ограничения?',hint:'Юридические требования, партнёрские обязательства, риск хаоса, дублирование сущностей, отсутствие владельца или бюджета.'},
+  {ico:'🔗',lbl:'Модель связи',hint:'Мастер-бренд / Билайн + название / by beeline / powered by / совместно с / при поддержке / при участии.'},
+  {ico:'📊',lbl:'Уровень 0–4',hint:'Определяется по скорингу и стоп-факторам. От нулевого брендирования до endorsed-сущности.'},
+  {ico:'✅',lbl:'Согласование',hint:'Ур.0 — не нужно. Ур.1 — Маркетинг. Ур.2 — ЦСБ. Ур.3 — ЦСБ+Директор. Ур.4 — Совет директоров+Юристы.'},
+];
+const chain=document.getElementById('process-chain');
+CHAIN.forEach((s,i)=>{
+  const d=document.createElement('div');d.className='pc-step'+(i===0?' hl':'');
+  d.innerHTML=`<div class="pc-n">0${i+1}</div><div class="pc-ico">${s.ico}</div><div class="pc-lbl">${s.lbl}</div>`;
+  d.onclick=()=>{document.querySelectorAll('.pc-step').forEach(x=>x.classList.remove('hl'));d.classList.add('hl');document.getElementById('pc-hint').textContent=s.hint;};
+  chain.appendChild(d);
+});
+document.getElementById('pc-hint').textContent=CHAIN[0].hint;
+
+const GLOSS=[
+  ['Мастер-бренд','Главный бренд компании — зонтик для всех сущностей','Всегда, основа всего','Нет','Билайн'],
+  ['Бренд-архитектура','Система отношений между мастер-брендом и всеми сущностями','При систематизации брендов','Нет','Этот документ'],
+  ['Саббренд','Брендовая сущность с частичной самостоятельностью под зонтиком','Крупные направления с отдельной аудиторией','Да, в связке','Билайн Бизнес'],
+  ['Endorsed brand','Сущность с собственной айдентикой, поддержанная мастер-брендом','ДЗО, отдельные компании группы','Да + маркер','Beeline.kz'],
+  ['Продуктовый бренд','Название продукта / сервиса внутри системы','Зрелые продукты с отдельным позиционированием','Редко','Билайн ТВ'],
+  ['Брендированная программа','Долгосрочная программа с устойчивым названием и носителями','HR-программы, лояльность, развитие','Нет','Слово за тобой'],
+  ['Коммуникационная платформа','Смысловая рамка для серии кампаний и проектов','Имиджевые кампании, платформы ценностей','Нет','Билайн за офлайн'],
+  ['Проект','Временная инициатива с конкретной целью и сроком','Пилоты, разовые активности','Нет','AI Workshop'],
+  ['Кампания','Ограниченная по времени коммуникационная активность','Продвижение продукта, сезон','Нет','Осенняя акция'],
+  ['Мероприятие','Событие — конференция, форум, встреча, корпоратив','Внутри и вовне','Редко','Forum Beeline'],
+  ['Key visual','Визуальное решение для конкретной кампании или события','Маркетинговые коммуникации','Нет','Баннер акции'],
+  ['Логотип','Знак + название + фирменные элементы в единой системе','Только для бренд-сущностей','Да','Билайн / Билайн Бизнес'],
+  ['Логоблок','Комбинация логотипа Билайна и названия направления','Уровни 1–3','Нет','Билайн | HR'],
+  ['Дизайн-атрибуты','Паттерны, иллюстрации, иконки, компоновка, типографика','При любых материалах','Нет','Жёлто-чёрные полосы'],
+  ['Бренд-атрибуты','ToV, ценности, характер, обещание бренда','При любой коммуникации','Нет','Прямота, тепло, смелость'],
+  ['ДЗО','Дочернее / зависимое общество — юридически самостоятельная структура','При наличии отдельного юрлица','Возможен','IT-компания группы'],
+  ['Co-branding','Совместное использование брендов двух компаний','Партнёрства, совместные продукты','Зависит','Билайн × Сбер'],
+  ['При поддержке Билайн','Билайн поддерживает чужую инициативу, не являясь владельцем','Внешние и партнёрские проекты','Нет','Музыкальный фестиваль'],
+  ['Powered by beeline','Билайн даёт технологию, инфраструктуру или платформу','Технологические партнёрства','Нет','Платёжная интеграция'],
+  ['Brand proof','Смысловой фильтр соответствия платформе бренда','Мероприятия, спецпроекты, активации','Нет','Билайн за офлайн'],
+];
+const gt=document.getElementById('gloss-table');
+gt.innerHTML='<thead><tr><th>Термин</th><th>Определение</th><th>Когда применяется</th><th>Нужен логотип</th><th>Пример</th></tr></thead>';
+const gb=document.createElement('tbody');
+GLOSS.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>`;gb.appendChild(tr);});
+gt.appendChild(gb);
+
+const TYPES=[
+  ['Функция / департамент','Внутренняя структурная единица: ИБ, HR-ops, Юр.','Внутренняя','Постоянно','Нет','0','⚠️ Нужна навигация, шаблон, плашка — не логотип'],
+  ['Бизнес-направление','B2C, B2B, B2O — коммерческий сегмент','Внешняя / внутренняя','Постоянно','Иногда','1–3','Логоблок только при наличии роли и аудитории'],
+  ['Программа','HR-программа, wellbeing, обучение, признание','Сотрудники','Долгий','Да','2','Возможны название, key visual, логоблок при владельце'],
+  ['Платформа','EVP, «Билайн за офлайн» — смысловая рамка','Широкая','Постоянно','Да','2','Смысловая и визуальная система, не всегда логотип'],
+  ['Внутренний зонтик','Объединяет несколько программ, проектов, комьюнити','Сотрудники','Долгий','Да','2–3','Нужен только при архитектуре внутри и навигационной пользе'],
+  ['Комьюнити / клуб','Growth Hacking, AI community, спорт, амбассадоры','Профессиональная','Долгий','Иногда','1–2','Визуальный модуль, не обязан иметь отдельный логотип'],
+  ['Инициатива','Пилот, новое направление, локальный запуск','Зависит','Короткий','Нет','0–1','На старте — не получает логотип до проверки устойчивости'],
+  ['Проект / кампания','Разовые активности, имиджевые кампании, лендинги','Разная','До 1 года','Нет','0–1','Почти никогда не получает логотип. Key visual, шаблон, плашка'],
+  ['Мероприятие','Встречи, форумы, конференции, HR-events','Разная','Разовый / ежегодный','Редко','0–1','Логотип только при регулярном стратегическом формате'],
+  ['Спецпроект','Медиа, музыкальные, городские, культурные проекты','Широкая внешняя','Средний','Иногда','1–2','Key visual + co-branding. Логотип только при долгосрочной роли'],
+  ['Партнёрство','Совместный проект, при поддержке, powered by, участие','Разная','Договорной','Зависит','1–3','Сначала роль Билайна — потом визуальная модель'],
+  ['Саббренд (внешний)','Долгосрочная платформа с накопленной узнаваемостью','Рыночная','Долгий','Да','3','Только при наличии всех критериев'],
+  ['ДЗО / компания','Юридически самостоятельная структура, фонд, дочка','Рыночная','Постоянно','Да','4','Стратегическое решение: юристы, PR, маркетинг, бизнес'],
+];
+const tbl=document.getElementById('types-table');
+tbl.innerHTML='<thead><tr>'+['Тип','Что это','Аудитория','Срок','Узнаваемость','Уровень','Риск / комментарий'].map(h=>`<th style="padding:9px 10px;font-size:9.5px;font-weight:700;color:#fff;border:1px solid #333;text-align:left;background:var(--b);white-space:nowrap;">${h}</th>`).join('')+'</tr></thead>';
+const tb=document.createElement('tbody');
+TYPES.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=r.map((c,i)=>`<td style="padding:9px 10px;border:1px solid var(--g2);font-size:11px;${i===0?'font-weight:700;background:var(--g);white-space:nowrap;':i===5?'text-align:center;':''}">${c}</td>`).join('');tb.appendChild(tr);});
+tbl.appendChild(tb);
+
+const LEVELS=[
+  {l:0,name:'Без брендирования',desc:'Разовые задачи, внутренние функции, локальные коммуникации',detail:'Мастер-бренд Билайн + стандартный шаблон. Название текстом. Никакого отдельного знака. Для большинства внутренних функций, разовых проектов и кампаний.',chips:['❌ Логотип','❌ Свой знак','❌ Доп. цвета','✅ Шаблоны','✅ Мастер-бренд','— Согласование не нужно'],ex:['ИБ','Комплаенс','Разовый лендинг','Стенд']},
+  {l:1,name:'Брендированный модуль',desc:'Узнаваемость внутри системы без отдельного бренда',detail:'Название, плашка, дескриптор, иконка из библиотеки, key visual, шаблон. Логотип не создаётся. Согласование с Маркетингом.',chips:['❌ Логотип','✅ Название / плашка','⚠️ Доп. цвета из библиотеки','✅ Key visual','— Согласование: Маркетинг'],ex:['HR-бренд','Growth Hacking Community','Внутренняя программа']},
+  {l:2,name:'Программа / платформа',desc:'Долгосрочные инициативы с устойчивым названием и носителями',detail:'Собственное название, key visual, шаблоны, адаптированные элементы. Возможен типографический логоблок. Мастер-бренд доминирует. Согласование с ЦСБ.',chips:['⚠️ Типогр. логоблок','✅ Название','⚠️ Ограниченная палитра','✅ Key visual','— Согласование: ЦСБ'],ex:['Слово за тобой','Билайн за офлайн','Внутренний зонтик','EVP-платформа']},
+  {l:3,name:'Саббренд',desc:'Устойчивые сущности с отдельной аудиторией и накапливаемой узнаваемостью',detail:'Логоблок / знак / endorsement-модель. Связь с Билайном обязательна. Нужны: паспорт бренда, владелец, система носителей, правила, реестр.',chips:['✅ Логоблок / знак','✅ Название','✅ Доп. цвета из библиотеки','⚠️ Endorsement обязателен','— Согласование: ЦСБ+Директор'],ex:['Билайн Бизнес','Крупная внешняя платформа']},
+  {l:4,name:'Endorsed / самостоятельная',desc:'ДЗО, отдельные компании, стратегические самостоятельные структуры',detail:'Решение принимается индивидуально. Требуется участие юристов, PR, маркетинга, бизнеса и руководства. Endorsement Билайна обязателен.',chips:['✅ Собственный логотип','✅ Самостоятельная айдентика','✅ Любые цвета','⚠️ Endorsement Билайна','— Согласование: Совет директоров'],ex:['ДЗО','Beeline.kz','Дочерняя компания']},
+];
+const ll=document.getElementById('levels-ladder');
+LEVELS.forEach(d=>{
+  const row=document.createElement('div');row.className=`level-row l${d.l}`;
+  row.innerHTML=`<div class="level-num">${d.l}</div><div class="level-body"><div class="level-name">Уровень ${d.l} — ${d.name}</div><div class="level-desc">${d.desc}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">${d.chips.map(c=>`<span class="chip${c.startsWith('✅')?' yes':c.startsWith('❌')?' no':c.startsWith('⚠️')?' warn':' black'}">${c}</span>`).join('')}</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${d.ex.map(e=>`<span class="badge badge-g">${e}</span>`).join('')}</div><div class="level-detail" id="ld${d.l}">${d.detail}</div></div>`;
+  row.onclick=()=>document.getElementById(`ld${d.l}`).classList.toggle('open');
+  ll.appendChild(row);
+});
+
+const MCOLS=['Лого Билайна','Своё назв.','Свой знак','Логоблок','Фирм. цвета','Доп. цвета','Дизайн-эл.','Паттерны','Сфера','Фотостиль','ToV','Шаблоны','Согласование'];
+const MDATA=[
+  ['Ур. 0','✅','✗','✗','✗','✅','✗','✅','✅','✅','✅','✅','—'],
+  ['Ур. 1','✅','✅','✗','⚠','✅','⚠','✅','✅','✅','⚠','✅','Маркетинг'],
+  ['Ур. 2','✅','✅','✗','✅','✅','⚠','✅','✅','✅','⚠','⚠','ЦСБ'],
+  ['Ур. 3','✅','✅','⚠','✅','✅','✅','⚠','⚠','⚠','⚠','⚠','ЦСБ+Дир.'],
+  ['Ур. 4','⚠','✅','✅','⚠','✅','✅','✅','✅','✅','✅','✅','СД+Юр.'],
+];
+const mt=document.getElementById('matrix-table');
+const mth=document.createElement('thead');mth.innerHTML='<tr><th class="lh">Уровень</th>'+MCOLS.map(c=>`<th>${c}</th>`).join('')+'</tr>';mt.appendChild(mth);
+const mtb=document.createElement('tbody');
+MDATA.forEach(row=>{const tr=document.createElement('tr');tr.innerHTML=row.map((c,i)=>{let cls=i===0?'lh':'';if(i>0){if(c==='✅')cls='v-ok';else if(c==='✗')cls='v-no';else if(c==='⚠')cls='v-w';else cls='v-i';}return`<td class="${cls}">${c}</td>`;}).join('');mtb.appendChild(tr);});
+mt.appendChild(mtb);
+
+const ROLES=[
+  {tag:'Владелец',formula:'by beeline',title:'Билайн создал и владеет',body:'Сущность полностью принадлежит Билайну. Максимальная ответственность и видимость бренда. Полный набор атрибутов.'},
+  {tag:'Инициатор',formula:'проект Билайна',title:'Билайн инициировал',body:'Билайн запустил инициативу, возможно с партнёрами. Доминирование мастер-бренда, но модель может эволюционировать.'},
+  {tag:'Равноправный партнёр',formula:'совместно с Билайн',title:'Паритетное партнёрство',body:'Равные роли сторон. Нужны правила co-branding и согласование логики размещения логотипов.'},
+  {tag:'Поддерживающая сторона',formula:'при поддержке Билайн',title:'Билайн поддерживает чужой проект',body:'Билайн поддерживает внешнюю инициативу, не являясь её владельцем. Проект НЕ выглядит как собственный проект Билайна.'},
+  {tag:'Технологический партнёр',formula:'powered by beeline',title:'Билайн даёт технологию',body:'Предоставляет связь, инфраструктуру, платформу. Логотип как технологический маркер, не как владелец контента.'},
+  {tag:'Участник',formula:'при участии Билайн',title:'Билайн точечно присутствует',body:'Участвует как спикер, эксперт или гость. Минимальный визуальный след: упоминание, бейдж, спикерский слот.'},
+];
+const rg=document.getElementById('role-grid');
+ROLES.forEach(r=>{const c=document.createElement('div');c.className='role-card';c.innerHTML=`<div class="rc-tag">${r.tag}</div><div class="rc-formula">${r.formula}</div><div class="rc-title">${r.title}</div><div class="rc-body">${r.body}</div>`;rg.appendChild(c);});
+
+const LM=[
+  {t:'Только мастер-бренд Билайн',when:'По умолчанию для всех материалов',levels:'0–1',plus:'Максимальная сила мастер-бренда',minus:'Нет дифференциации направлений',appr:'Не нужно'},
+  {t:'Билайн + название направления',when:'Крупные направления с аудиторией',levels:'1–2',plus:'Баланс узнаваемости и различия',minus:'Строгие правила компоновки',appr:'Маркетинг'},
+  {t:'Типографическое название в системе',when:'Программы без отдельного знака',levels:'2',plus:'Гибкость без нового знака',minus:'Требует дизайн-поддержки',appr:'ЦСБ'},
+  {t:'Название + фирменный маркер',when:'Устойчивые программы с узнаваемостью',levels:'2–3',plus:'Визуальная идентификация в системе',minus:'Маркер только из библиотеки',appr:'ЦСБ'},
+  {t:'Саббренд by beeline / от Билайна',when:'Крупные направления уровня 3',levels:'3',plus:'Самостоятельность + обязательная связь',minus:'Строгие правила endorsement',appr:'ЦСБ + Директор'},
+  {t:'Powered by beeline',when:'Билайн даёт технологию или инфраструктуру',levels:'1–3',plus:'Технологическая роль без доминирования',minus:'Не создаёт ощущение собственного проекта',appr:'ЦСБ'},
+  {t:'Совместно с Билайн',when:'Равноправные партнёрства',levels:'2–3',plus:'Охват аудиторий обеих сторон',minus:'Риск доминирования партнёра',appr:'ЦСБ + Директор + Юр.'},
+  {t:'При поддержке Билайн',when:'Билайн поддерживает чужой проект',levels:'1–2',plus:'Минимальный риск для мастер-бренда',minus:'Проект НЕ становится собственным',appr:'ЦСБ'},
+  {t:'При участии Билайн',when:'Точечное присутствие как спикер / эксперт',levels:'0–1',plus:'Гибкое точечное участие',minus:'Минимальная узнаваемость',appr:'Маркетинг'},
+  {t:'Co-branding с партнёром',when:'Паритетные совместные продукты',levels:'2–3',plus:'Синергия брендов',minus:'Сложные правила баланса',appr:'ЦСБ + Юр. + Директор'},
+  {t:'Самостоятельная айдентика ДЗО',when:'Юридически отдельные структуры',levels:'4',plus:'Полная гибкость для отдельного рынка',minus:'Обязательна связь с Билайном',appr:'Совет директоров'},
+];
+const lmc=document.getElementById('logo-models');
+LM.forEach((m,i)=>{
+  const c=document.createElement('div');c.className='lm-card';
+  c.innerHTML=`<div class="lm-head" onclick="toggleLM(this)"><div class="lm-num">${i+1}</div><div class="lm-title">${m.t}</div><div class="lm-arr">▾</div></div><div class="lm-body"><div class="lm-grid"><div><div class="lm-fl">Когда применяется</div><div class="lm-fv">${m.when}</div></div><div><div class="lm-fl">Уровни</div><div class="lm-fv">${m.levels}</div></div><div><div class="lm-fl">Плюсы</div><div class="lm-fv">${m.plus}</div></div><div><div class="lm-fl">Ограничения</div><div class="lm-fv">${m.minus}</div></div></div><div class="appr-tag">Согласование: ${m.appr}</div></div>`;
+  lmc.appendChild(c);
+});
+function toggleLM(h){const b=h.nextElementSibling,a=h.querySelector('.lm-arr');b.classList.toggle('open');a.classList.toggle('open');b.style.maxHeight=b.classList.contains('open')?'300px':'0';}
+
+const SCORE_OBL=[
+  {n:1,name:'Самостоятельная роль',hint:'Есть ли роль за пределами одного носителя или события?'},
+  {n:2,name:'Ценностное предложение',hint:'Что конкретно обещает и даёт аудитории эта сущность?'},
+  {n:3,name:'Устойчивая аудитория',hint:'Есть ли аудитория, с которой сущность работает регулярно?'},
+  {n:4,name:'Долгосрочность',hint:'Живёт ли сущность дольше одного запуска? Есть roadmap?'},
+  {n:5,name:'Система носителей',hint:'Есть ли больше одного формата проявления?'},
+  {n:6,name:'Владелец и ресурсы',hint:'Есть ли владелец, бюджет и операционная поддержка?'},
+];
+const SCORE_AMP=[
+  {n:7,name:'Стратегическая значимость',hint:'Влияет ли на ключевые цели компании?'},
+  {n:8,name:'Накопление узнаваемости',hint:'Нужно ли, чтобы аудитория запоминала сущность отдельно?'},
+  {n:9,name:'Зонтичность',hint:'Объединяет ли несколько программ, проектов или инициатив?'},
+  {n:10,name:'Усиление мастер-бренда',hint:'Как сущность работает на капитал Билайна?'},
+  {n:11,name:'Управляемый риск фрагментации',hint:'Риск создания визуального хаоса управляем?'},
+  {n:12,name:'Юридический статус',hint:'Есть ли партнёрские обязательства, права, юрлицо?'},
+  {n:13,name:'Масштабирование',hint:'Планируется ли рост аудитории и географии?'},
+  {n:14,name:'Конкурентная среда',hint:'Нужна ли дифференциация в конкурентном контексте?'},
+];
+const oblScores=new Array(6).fill(0);
+const ampScores=new Array(8).fill(0);
+function updateScoring(){
+  const oT=oblScores.reduce((a,b)=>a+b,0),aT=ampScores.reduce((a,b)=>a+b,0);
+  document.getElementById('srp-obl-bar').style.width=Math.round(oT/12*100)+'%';
+  document.getElementById('srp-amp-bar').style.width=Math.round(aT/16*100)+'%';
+  document.getElementById('srp-obl-val').textContent=`${oT} / 12`;
+  document.getElementById('srp-amp-val').textContent=`${aT} / 16`;
+  let lv,sub;
+  if(oT<5){lv='Уровень 0 — без брендирования';sub='Шаблоны и мастер-бренд Билайна';}
+  else if(oT<8){lv='Уровень 1 — брендированный модуль';sub='Название, плашка, key visual. Логотип не создаётся';}
+  else if(aT<8){lv='Уровень 2 — программа / платформа';sub='Логоблок, шаблоны, ограниченная палитра';}
+  else if(aT<12){lv='Уровень 3 — саббренд';sub='Логоблок + знак. Согласование с директором по бренду';}
+  else{lv='Уровень 4 — только при стратегическом согласовании';sub='Высокий балл не даёт автоматического права. Нужно стратегическое решение';}
+  document.getElementById('srp-level').textContent=lv;
+  document.getElementById('srp-sub').textContent=sub;
+}
+const sc=document.getElementById('score-container');
+function buildSc(items,arr,label,note){
+  const sec=document.createElement('div');sec.className='score-section';sec.innerHTML=`<div class="score-section-title">${label}</div>`;
+  const grid=document.createElement('div');grid.className='score-grid';
+  items.forEach((item,i)=>{
+    const card=document.createElement('div');card.className='sc';
+    card.innerHTML=`<div class="sc-num">${item.n}</div><div class="sc-name">${item.name}</div><div class="sc-hint">${item.hint}</div><div class="sc-slider-row"><input type="range" class="sc-slider" min="0" max="2" step="1" value="0" oninput="${arr===oblScores?'oblScores':'ampScores'}[${i}]=+this.value;updateScoring();this.closest('.sc').querySelector('.sc-val').textContent=this.value;updatePips(this)"><div class="sc-val">0</div></div><div class="sc-pips">${[0,1,2].map(p=>`<div class="sc-pip${p===0?' on':''}"></div>`).join('')}</div>`;
+    grid.appendChild(card);
+  });
+  sec.appendChild(grid);
+  if(note){const n=document.createElement('div');n.className='card';n.style.borderLeft='3px solid var(--y)';n.style.marginTop='12px';n.innerHTML=`<div style="font-size:12px;color:var(--t2);line-height:1.6;">${note}</div>`;sec.appendChild(n);}
+  return sec;
+}
+sc.appendChild(buildSc(SCORE_OBL,oblScores,'ОБЯЗАТЕЛЬНЫЕ КРИТЕРИИ (мин. 8 из 12)','Если обязательных баллов меньше 8 из 12 — логотип не рассматривается.'));
+sc.appendChild(buildSc(SCORE_AMP,ampScores,'УСИЛИВАЮЩИЕ КРИТЕРИИ (дополнительные основания)','Высокий балл не даёт автоматического права на логотип при наличии стоп-факторов.'));
+const rp=document.createElement('div');rp.className='score-result-panel';
+rp.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;"><div><div class="srp-label">Обязательные</div><div class="srp-bar-wrap" style="margin-top:4px;"><div class="srp-bar" id="srp-obl-bar" style="width:0%"></div></div><div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:4px;" id="srp-obl-val">0 / 12</div></div><div><div class="srp-label">Усиливающие</div><div class="srp-bar-wrap" style="margin-top:4px;"><div class="srp-bar" id="srp-amp-bar" style="width:0%"></div></div><div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:4px;" id="srp-amp-val">0 / 16</div></div></div><div class="srp-label">Рекомендуемый уровень</div><div class="srp-level" id="srp-level">Уровень 0 — без брендирования</div><div class="srp-sub" id="srp-sub">Шаблоны и мастер-бренд Билайна</div>`;
+sc.appendChild(rp);
+function updatePips(sl){const v=+sl.value;sl.closest('.sc').querySelectorAll('.sc-pip').forEach((p,j)=>p.classList.toggle('on',j<=v));}
+
+const DT=[
+  {id:0,qn:1,q:'Это продуктовая сущность?',why:'Продуктовая архитектура — отдельный трек',opts:[
+    {t:'Да — продукт, тариф, сервис, приложение, цифровая платформа',i:'📦',r:{lv:'Продуктовый трек',nm:'Отдельный трек продуктовой архитектуры',body:'Данное дерево не охватывает продуктовые сущности. Передайте задачу в трек продуктовой бренд-архитектуры.',chips:['Отдельный процесс'],appr:'Команда продуктового бренда'}},
+    {t:'Нет — непродуктовая сущность',i:'✅',next:1},
+  ]},
+  {id:1,qn:2,q:'Что это за категория сущности?',why:'Тип задаёт базовые правила и ожидания',opts:[
+    {t:'Функция / департамент (ИБ, HR, Юр., Финансы)',i:'🏢',next:2},
+    {t:'Бизнес-направление (B2C, B2B, B2O)',i:'📊',next:3},
+    {t:'Программа / платформа (обучение, EVP, wellbeing)',i:'🎓',next:4},
+    {t:'Комьюнити / клуб',i:'👥',next:5},
+    {t:'Проект / кампания / инициатива',i:'📌',next:6},
+    {t:'Мероприятие',i:'🎤',next:7},
+    {t:'Спецпроект / активация',i:'✨',next:8},
+    {t:'Партнёрство / интеграция',i:'🤝',next:9},
+    {t:'Потенциальный саббренд / внешняя платформа',i:'🚀',next:10},
+    {t:'ДЗО / отдельное юрлицо',i:'🏛',r:{lv:'Уровень 4',nm:'Endorsed / самостоятельная сущность',body:'ДЗО требует стратегического решения с участием юристов, PR, маркетинга и руководства.',chips:['Стратегическое решение','Участие юристов','Совет директоров'],appr:'Совет директоров + Юристы + PR'}},
+  ]},
+  {id:2,qn:3,q:'Функция имеет устойчивую внешнюю аудиторию и регулярную коммуникацию?',why:'Функции нужна навигация, а не бренд',opts:[
+    {t:'Нет — только внутренние коммуникации',i:'🔒',r:{lv:'Уровень 0',nm:'Без брендирования',body:'Функции достаточно шаблона, плашки и дескриптора. Логотип не создаётся.',chips:['Шаблон','Плашка','Дескриптор'],appr:'Не нужно'}},
+    {t:'Да — есть внешний контур, кандидатская коммуникация',i:'📢',r:{lv:'Уровень 1',nm:'Брендированный модуль',body:'Допускается логоблок и устойчивое название в рамках системы. Логотип не создаётся.',chips:['Логоблок','Название','Key visual'],appr:'Маркетинг'}},
+  ]},
+  {id:3,qn:3,q:'Направление имеет отдельную аудиторию и маркетинговую задачу на узнаваемость?',why:'Направление может иметь маркировку при наличии роли',opts:[
+    {t:'Нет — общий Билайн, без отдельного позиционирования',i:'↩',r:{lv:'Уровень 0–1',nm:'Мастер-бренд / модуль',body:'Используется мастер-бренд Билайн. Возможна цветовая метка или плашка для навигации.',chips:['Мастер-бренд','Плашка','Цветовая метка'],appr:'Не нужно'}},
+    {t:'Да — есть отдельная аудитория, носители, коммуникация',i:'✅',r:{lv:'Уровень 2–3',nm:'Логоблок / саббренд',body:'Возможен логоблок «Билайн Бизнес» или аналог. При высоком масштабе — саббренд с паспортом бренда.',chips:['Логоблок','Паспорт бренда','Система носителей'],appr:'ЦСБ + Директор'}},
+  ]},
+  {id:4,qn:3,q:'Программа / платформа долгосрочная и имеет владельца?',why:'Долгосрочность и владелец — базовые условия для уровня 2',opts:[
+    {t:'Нет — временная или без владельца',i:'⏳',r:{lv:'Уровень 0–1',nm:'Шаблон / модуль',body:'Временной программе достаточно key visual и шаблона. Логотип не создаётся.',chips:['Key visual','Шаблон','Название текстом'],appr:'Маркетинг'}},
+    {t:'Да — долгосрочная, есть владелец и носители',i:'✅',next:11},
+  ]},
+  {id:5,qn:3,q:'Комьюнити масштабное и долгосрочное?',why:'Небольшое комьюнити не требует отдельного логотипа',opts:[
+    {t:'Нет — небольшое, внутреннее или временное',i:'🏠',r:{lv:'Уровень 1',nm:'Визуальный модуль',body:'Комьюнити получает визуальный модуль: иконку, шаблон, название. Логотип не создаётся.',chips:['Иконка из библиотеки','Шаблон','Название'],appr:'Маркетинг'}},
+    {t:'Да — масштабное, внешнее, регулярное',i:'🌍',next:11},
+  ]},
+  {id:6,qn:3,q:'Проект живёт дольше 6 месяцев и имеет несколько носителей?',why:'Краткосрочные проекты не получают логотип',opts:[
+    {t:'Нет — разовый или кратковременный',i:'⏳',r:{lv:'Уровень 0',nm:'Key visual / шаблон',body:'Разовый проект получает key visual в рамках мастер-бренда. Никакого отдельного логотипа.',chips:['Key visual','Шаблон Билайна','Мастер-бренд'],appr:'Не нужно'}},
+    {t:'Да — есть continuity и несколько носителей',i:'📅',next:11},
+  ]},
+  {id:7,qn:3,q:'Мероприятие регулярное, стратегическое, накапливает узнаваемость?',why:'Мероприятие получает логотип только в исключительных случаях',opts:[
+    {t:'Нет — разовое или нерегулярное',i:'1️⃣',r:{lv:'Уровень 0–1',nm:'Event key visual',body:'Достаточно event key visual, шаблона и мастер-бренда.',chips:['Event key visual','Event-шаблон','Мастер-бренд'],appr:'Не нужно / Маркетинг'}},
+    {t:'Да — ежегодное, стратегическое, накапливает узнаваемость',i:'🔄',next:8},
+  ]},
+  {id:8,qn:4,q:'Соответствует brand proof «Билайн за офлайн»?',why:'Мероприятия и спецпроекты проверяются через brand proof',opts:[
+    {t:'Нет — digital-only, нет живого взаимодействия',i:'💻',r:{lv:'Уровень 0–1',nm:'Стандартный модуль',body:'Используйте стандартный key visual и шаблон. Платформа «За офлайн» не применяется.',chips:['Key visual','Шаблон','Мастер-бренд'],appr:'Маркетинг'}},
+    {t:'Да — создаёт живой опыт, офлайн-действие, эмоцию',i:'🎭',next:12},
+  ]},
+  {id:9,qn:3,q:'Какую роль играет Билайн в партнёрстве?',why:'Роль Билайна определяет визуальную модель',opts:[
+    {t:'Владелец / инициатор',i:'👑',next:11},
+    {t:'Равноправный партнёр',i:'🤝',r:{lv:'Уровень 2–3',nm:'Совместно с Билайн',body:'Co-branding модель. Нужны правила паритета логотипов, согласование с ЦСБ и юристами.',chips:['Co-branding модуль','Правила паритета','Совместный key visual'],appr:'ЦСБ + Юр. + Директор'}},
+    {t:'Поддерживающая сторона',i:'🤲',r:{lv:'Уровень 1',nm:'При поддержке Билайн',body:'Минимальный визуальный след. Проект НЕ выглядит как собственный проект Билайна.',chips:['Плашка «при поддержке»','Минимальный след'],appr:'ЦСБ'}},
+    {t:'Технологический партнёр',i:'⚙️',r:{lv:'Уровень 1',nm:'Powered by beeline',body:'Логотип как технологический маркер, не как владелец контента.',chips:['Powered by beeline','Технологический маркер'],appr:'ЦСБ'}},
+    {t:'Участник — спикер, эксперт, гость',i:'🎙',r:{lv:'Уровень 0',nm:'При участии Билайн',body:'Точечное присутствие. Упоминание, бейдж, слайд. Никакого брендирования мероприятия.',chips:['Упоминание','Бейдж спикера'],appr:'Не нужно'}},
+  ]},
+  {id:10,qn:3,q:'Есть все 6 обязательных критериев для саббренда?',why:'Саббренд требует полного набора оснований',opts:[
+    {t:'Нет — один или несколько критериев отсутствуют',i:'❌',r:{lv:'Уровень 2',nm:'Программа / платформа',body:'Пока не все основания. Начните с уровня 2 и пересмотрите через 6–12 месяцев.',chips:['Логоблок','Программа уровня 2','Пересмотр через год'],appr:'ЦСБ'}},
+    {t:'Да — роль, УЦП, аудитория, долгосрочность, носители, владелец',i:'✅',next:13},
+  ]},
+  {id:11,qn:5,q:'Сущность объединяет несколько программ, проектов или инициатив?',why:'Зонтичность — основание для уровня 2+',opts:[
+    {t:'Нет — одиночная сущность',i:'1️⃣',next:12},
+    {t:'Да — объединяет несколько дочерних сущностей',i:'☂️',next:14},
+  ]},
+  {id:12,qn:6,q:'Есть стоп-факторы?',why:'Стоп-факторы блокируют логотип даже при высоком балле',opts:[
+    {t:'Да — один или несколько стоп-факторов',i:'🛑',r:{lv:'Уровень 0–1',nm:'Стоп. Логотип не создаётся.',body:'Используйте шаблон, плашку, key visual или co-branding-модуль. Обратитесь в ЦСБ.',chips:['Шаблон','Плашка','Key visual','Обратитесь в ЦСБ'],appr:'ЦСБ'}},
+    {t:'Нет — все проверки пройдены',i:'✅',next:15},
+  ]},
+  {id:13,qn:6,q:'Нет стоп-факторов и есть согласование руководства?',why:'Саббренд без согласования не запускается',opts:[
+    {t:'Нет — есть стоп-факторы или нет согласования',i:'🛑',r:{lv:'Уровень 2',nm:'Пока программа / платформа',body:'Устраните стоп-факторы и получите согласование. Начните с уровня 2.',chips:['Уровень 2 временно','Пересмотр через год'],appr:'ЦСБ'}},
+    {t:'Да — все проверки пройдены',i:'✅',r:{lv:'Уровень 3',nm:'Саббренд под мастер-брендом',body:'Обязательны: паспорт бренда, система носителей, владелец, реестр. Связь с Билайном обязательна.',chips:['Логоблок','Паспорт бренда','Реестр','Endorsement Билайна'],appr:'ЦСБ + Директор по бренду'}},
+  ]},
+  {id:14,qn:6,q:'Зонтик: есть смысловая архитектура внутри, долгосрочность и навигационная польза?',why:'Зонтик появляется по необходимости, не по желанию',opts:[
+    {t:'Нет — нет архитектуры или польза не очевидна',i:'❌',r:{lv:'Уровень 1',nm:'Брендированный модуль',body:'Достаточно модуля для каждой дочерней сущности отдельно. Зонтик — при росте системы.',chips:['Модуль для каждой сущности','Без зонтика пока'],appr:'Маркетинг'}},
+    {t:'Да — есть архитектура, польза, долгосрочность',i:'✅',r:{lv:'Уровень 2',nm:'Внутренний зонтик — программа / платформа',body:'Зонтик получает название, key visual, шаблоны и навигационные правила. Типографический логоблок возможен.',chips:['Название зонтика','Навигационная система','Шаблоны','Типогр. логоблок'],appr:'ЦСБ'}},
+  ]},
+  {id:15,qn:7,q:'Итоговый скоринг: какой уровень показывает модель?',why:'Скоринг определяет рекомендуемый уровень',opts:[
+    {t:'Низкий (0–7 обязательных баллов)',i:'0️⃣',r:{lv:'Уровень 0–1',nm:'Без брендирования / модуль',body:'Используйте мастер-бренд, шаблон, плашку или key visual.',chips:['Мастер-бренд','Шаблон','Плашка'],appr:'Маркетинг'}},
+    {t:'Средний (8–10 обяз., низкие усиливающие)',i:'2️⃣',r:{lv:'Уровень 2',nm:'Программа / платформа',body:'Логоблок, шаблоны, ограниченная палитра. Мастер-бренд доминирует.',chips:['Логоблок','Шаблоны','Ограниченная палитра'],appr:'ЦСБ'}},
+    {t:'Высокий (высокие обяз. + высокие усиливающие)',i:'3️⃣',r:{lv:'Уровень 3',nm:'Саббренд',body:'Логоблок / знак с endorsement Билайна. Паспорт, реестр, владелец, система носителей.',chips:['Логоблок / знак','Паспорт бренда','Endorsement'],appr:'ЦСБ + Директор по бренду'}},
+  ]},
+];
+let dtPath=[],dtAns=[];
+function getCurQ(){if(!dtPath.length)return 0;const last=dtPath[dtPath.length-1],ai=dtAns[dtAns.length-1],opt=DT[last].opts[ai];if(opt.r)return null;return opt.next;}
+function renderDT(){
+  const cont=document.getElementById('dt-container'),res=document.getElementById('dt-result'),rb=document.getElementById('dt-reset-btn');
+  cont.innerHTML='';
+  const curQ=getCurQ();
+  const prog=document.createElement('div');prog.className='dt-progress';
+  for(let i=0;i<7;i++){const d=document.createElement('div');d.className='dtp'+(i<dtPath.length?' done':i===dtPath.length?' cur':'');prog.appendChild(d);}
+  cont.appendChild(prog);
+  const bc=document.createElement('div');bc.className='dt-bc';
+  dtAns.forEach((ai,idx)=>{
+    const q=DT[dtPath[idx]];if(!q)return;
+    if(idx>0){const s=document.createElement('div');s.className='bc-pill bc-sep';s.textContent='›';bc.appendChild(s);}
+    const p=document.createElement('div');p.className='bc-pill';
+    const opt=q.opts[ai];p.innerHTML=`<span>${opt.i}</span><span>${opt.t.length>22?opt.t.slice(0,21)+'…':opt.t}</span>`;bc.appendChild(p);
+  });
+  cont.appendChild(bc);
+  dtAns.forEach((ai,idx)=>{
+    const q=DT[dtPath[idx]];if(!q)return;
+    const h=document.createElement('div');h.className='dt-hist-step';
+    h.innerHTML=`<div class="dt-hist-head"><div class="dt-hist-n">${q.qn}</div><div class="dt-hist-q">${q.q}</div></div><div class="dt-hist-ans">${q.opts.map((o,i)=>`<span style="font-size:11px;padding:3px 10px;border-radius:20px;background:${i===ai?'var(--b)':'var(--g)'};color:${i===ai?'var(--y)':'var(--t2)'};border:1px solid ${i===ai?'var(--b)':'var(--g2)'};">${o.i} ${o.t}</span>`).join('')}</div>`;
+    cont.appendChild(h);
+  });
+  res.style.display='none';rb.style.display='none';
+  if(curQ===null){
+    const last=dtPath[dtPath.length-1],r=DT[last].opts[dtAns[dtAns.length-1]].r;
+    const LCOLS={'0':'#EBEBEB','0–1':'#EBEBEB','1':'#FFF5B0','1–2':'#FFF9D6','2':'#FFE566','2–3':'#FFE566','3':'#FFD507','4':'#0D0D0D','Продуктовый трек':'#4A4A4A'};
+    const lk=r.lv.replace('Уровень ','').trim();
+    res.innerHTML=`<div class="rb-eyebrow">Рекомендация готова</div><div class="rb-level" style="color:${LCOLS[lk]||'#FFD507'}">${r.lv}</div><div class="rb-name">${r.nm}</div><div class="rb-body">${r.body}</div><div class="rb-chips">${r.chips.map((c,i)=>`<div class="rb-chip${i===0?' hi':''}">${c}</div>`).join('')}</div><div class="rb-approval">Согласование: <span>${r.appr}</span></div><div class="rb-btns"><button class="rbb p" onclick="resetDT()">↺ Заново</button><button class="rbb s" onclick="undoDT()">← Назад</button></div>`;
+    res.style.display='block';rb.style.display='inline-block';
+  } else {
+    const q=DT[curQ];const qb=document.createElement('div');qb.className='dt-step active-step';
+    qb.innerHTML=`<div class="dt-qhead"><div class="dt-qn">${q.qn}</div><div><div class="dt-qtext">${q.q}</div><div class="dt-why">${q.why}</div></div></div><div class="dt-opts" id="dtop${curQ}"></div>`;
+    cont.appendChild(qb);
+    const oo=document.getElementById(`dtop${curQ}`);
+    q.opts.forEach((o,i)=>{const btn=document.createElement('button');btn.className='dt-opt';btn.innerHTML=`<span class="opt-ico">${o.i}</span><span>${o.t}</span>`;btn.onclick=()=>{dtPath.push(curQ);dtAns.push(i);renderDT();};oo.appendChild(btn);});
+    if(dtPath.length>0){const b=document.createElement('button');b.className='dt-back';b.textContent='← Назад';b.onclick=undoDT;cont.appendChild(b);rb.style.display='inline-block';}
+  }
+}
+function undoDT(){if(dtPath.length>0){dtPath.pop();dtAns.pop();renderDT();}}
+function resetDT(){dtPath=[];dtAns=[];renderDT();}
+renderDT();
+
+const STOPS=['Один носитель: презентация, лендинг, афиша или стенд','Разовое мероприятие без продолжения','Сущность живёт менее 6 месяцев','Нет назначенного владельца','Нет бюджета на поддержку айдентики','Нет регулярных носителей','Нет самостоятельного ценностного предложения','Аудитория — только локальная команда','Название ещё не утверждено','Сущность дублирует уже существующую','Связь с Билайном становится непонятной','Отдельная айдентика ослабляет мастер-бренд','Нет согласования с Центром стандартов бренда','Задачу можно решить шаблоном, плашкой, key visual или co-branding-модулем'];
+const stopChecked=new Array(STOPS.length).fill(false);
+const sl=document.getElementById('stop-list');
+STOPS.forEach((s,i)=>{const li=document.createElement('li');li.className='stop-item';li.innerHTML=`<div class="stop-cb" id="scb${i}"></div><div class="stop-text">${s}</div>`;li.onclick=()=>{stopChecked[i]=!stopChecked[i];const cb=document.getElementById(`scb${i}`);cb.classList.toggle('chk',stopChecked[i]);cb.textContent=stopChecked[i]?'✕':'';document.getElementById('stop-alert').classList.toggle('show',stopChecked.some(Boolean));};sl.appendChild(li);});
+
+const ALT=[
+  ['Выделить функцию или направление','Плашка / дескриптор / цветовая метка','«Безопасность» — жёлтая плашка в шаблоне','Не нужно'],
+  ['Оформить мероприятие','Event key visual / event-шаблон','Форум Билайна — key visual в фирменном стиле','Маркетинг'],
+  ['Оформить презентацию','Шаблон направления / шаблон функции','Шаблон B2B-презентации','Не нужно'],
+  ['Показать партнёрство','Co-branding-модуль','Логотипы двух компаний в паритете','ЦСБ + Юр.'],
+  ['Сделать серию материалов','Брендированный модуль с key visual','Серия постов Growth Hacking Community','Маркетинг'],
+  ['Выделить тему / рубрику','Иконка из библиотеки + типографика','Иконка AI Community в системе Билайна','Маркетинг'],
+  ['Оформить внутреннюю программу','Типографическое название + шаблоны','«Слово за тобой» — логоблок из типографики','ЦСБ'],
+  ['Оформить digital-сервис','UI-гайд + продуктовый дескриптор','Фирменные цвета в интерфейсе','ЦСБ'],
+  ['Показать поддержку внешнего проекта','«При поддержке Билайн» — плашка','Фестиваль при поддержке Билайна','ЦСБ'],
+  ['Показать технологическую роль','«Powered by beeline» — маркер','Платёжная форма с маркером beeline','ЦСБ'],
+  ['Объединить несколько инициатив','Внутренний зонтик — смысловая рамка','«Билайн Университет» как зонтик программ','ЦСБ'],
+];
+const at=document.getElementById('alt-table');at.innerHTML='<thead><tr><th>Задача</th><th>Решение вместо логотипа</th><th>Пример</th><th>Согласование</th></tr></thead>';
+const ab=document.createElement('tbody');ALT.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=r.map(c=>`<td>${c}</td>`).join('');ab.appendChild(tr);});at.appendChild(ab);
+
+const BP_FILTERS=['Проект создаёт повод для живого взаимодействия людей','Помогает выйти из автоматического digital-потребления в реальный опыт','В нём есть эмоция, присутствие, контакт, совместное переживание','Билайн выглядит как естественный проводник к настоящему опыту','Есть понятное офлайн-действие, событие или ритуал','Digital усиливает реальность, а не заменяет её','Проект не противоречит идее настоящести','У Билайна есть естественная роль в этом проекте'];
+const bpPassed=new Array(BP_FILTERS.length).fill(null);
+const bpf=document.getElementById('bp-filter');
+BP_FILTERS.forEach((f,i)=>{
+  const item=document.createElement('div');item.className='bp-item';
+  item.innerHTML=`<div class="bp-num" id="bpn${i}">${i+1}</div><div class="bp-text">${f}</div>`;
+  item.onclick=()=>{if(bpPassed[i]===null)bpPassed[i]=true;else if(bpPassed[i]===true)bpPassed[i]=false;else bpPassed[i]=null;item.classList.toggle('pass',bpPassed[i]===true);item.classList.toggle('fail',bpPassed[i]===false);const n=document.getElementById(`bpn${i}`);n.textContent=bpPassed[i]===true?'✓':bpPassed[i]===false?'✗':i+1;updateBP();};
+  bpf.appendChild(item);
+});
+function updateBP(){
+  const answered=bpPassed.filter(v=>v!==null).length;if(!answered){document.getElementById('bp-result').style.display='none';return;}
+  const passed=bpPassed.filter(v=>v===true).length;const r=document.getElementById('bp-result');r.style.display='block';
+  if(passed>=6){r.className='bp-result bp-pass';r.textContent=`✓ Проект соответствует brand proof «Билайн за офлайн» (${passed}/8). Допускается смысловая рамка и key visual. Это НЕ даёт автоматического права на логотип.`;}
+  else if(passed>=4){r.className='bp-result bp-warn';r.textContent=`⚠ Частичное соответствие (${passed}/8). Возможно точечное использование элементов платформы. Требуется согласование с ЦСБ.`;}
+  else{r.className='bp-result bp-fail';r.textContent=`✗ Проект не соответствует brand proof «Билайн за офлайн» (${passed}/8). Используйте стандартные инструменты мастер-бренда.`;}
+}
+const BP_SC=[
+  ['Собственный имиджевый проект Билайна','Полностью соответствует','by beeline / мастер-бренд','Key visual, мастер-бренд, носители','Не создавать отдельный логотип без согласования'],
+  ['Партнёрский музыкальный спецпроект','Соответствует при наличии офлайн','При поддержке / совместно','Co-branding модуль, плашка','Не делать проект «собственным»'],
+  ['Внешнее мероприятие при поддержке','Соответствует если живой опыт есть','При поддержке Билайн','Плашка «при поддержке», мастер-бренд','Не брендировать как собственное'],
+  ['HR-event','Соответствует при внутреннем офлайне','Мастер-бренд / брендированный модуль','Event key visual, шаблон','Не создавать отдельный логотип'],
+  ['Digital-only проект','Не соответствует','Стандартный key visual','Шаблон, мастер-бренд','Не применять платформу «за офлайн»'],
+  ['Узкая B2B-презентация на конференции','Не соответствует','Мастер-бренд + шаблон','Шаблон B2B, логотип Билайна','Не создавать event-бренд для стенда'],
+  ['Городской офлайн-проект','Соответствует полностью','by beeline / при поддержке','Key visual платформы, event-носители','Не превращать разовый проект в постоянный логотип'],
+  ['Внутреннее корпоративное мероприятие','Соответствует при живом формате','Мастер-бренд / HR-модуль','Event-шаблон, мастер-бренд','Не создавать логотип для разового события'],
+];
+const bpst=document.getElementById('bp-scenarios-table');bpst.innerHTML='<thead><tr><th>Сценарий</th><th>Brand proof</th><th>Модель связи</th><th>Что можно</th><th>Что нельзя</th></tr></thead>';
+const bpsb=document.createElement('tbody');BP_SC.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=r.map(c=>`<td>${c}</td>`).join('');bpsb.appendChild(tr);});bpst.appendChild(bpsb);
+
+const REG=[
+  ['Билайн','Мастер-бренд','Владелец','4','by beeline','Директор по бренду','Все','act'],
+  ['Билайн Бизнес','Саббренд','Владелец','3','by beeline','Директор B2B','B2B-клиенты','act'],
+  ['B2C','Бизнес-направление','Владелец','2','Билайн + название','Директор B2C','Физлица','act'],
+  ['B2B','Бизнес-направление','Владелец','2','Билайн + название','Директор B2B','Бизнес','act'],
+  ['B2O','Бизнес-направление','Владелец','1','Билайн + название','Директор B2O','Операторы','act'],
+  ['HR-бренд','Программа / модуль','Инициатор','1','Билайн | HR','HR-директор','Сотрудники / кандидаты','act'],
+  ['ИБ','Функция','Владелец','0','Мастер-бренд','CISO','Сотрудники','act'],
+  ['Комплаенс','Функция','Владелец','0','Мастер-бренд','Дир. комплаенс','Сотрудники','act'],
+  ['Слово за тобой','Программа','Инициатор','2','Типогр. логоблок','HR-директор','Сотрудники','act'],
+  ['Билайн за офлайн','Платформа / brand proof','Инициатор','2','by beeline','CMO','Широкая внешняя','act'],
+  ['Growth Hacking Community','Комьюнити','Инициатор','1','Модуль','Продуктовый офис','Профессионалы','act'],
+  ['AI Workshop','Проект','Инициатор','0','Мастер-бренд','Команда','Сотрудники','tmp'],
+  ['B2B-презентация на конф.','Проект','Участник','0','При участии','Маркетинг','B2B-аудитория','tmp'],
+  ['Партнёрский муз. спецпроект','Спецпроект','Поддерживающая','1','При поддержке','Маркетинг','Широкая','tmp'],
+  ['ДЗО','ДЗО','Endorsed','4','Endorsed модель','CEO ДЗО','Рыночная','act'],
+];
+const rt=document.getElementById('reg-table');rt.innerHTML='<thead><tr><th>Сущность</th><th>Тип</th><th>Роль Билайна</th><th>Уровень</th><th>Модель связи</th><th>Владелец</th><th>Аудитория</th><th>Статус</th></tr></thead>';
+const rb=document.createElement('tbody');
+REG.forEach(r=>{const tr=document.createElement('tr');const sc=r[7]==='act'?'s-act':r[7]==='tmp'?'s-tmp':'s-arch';const st=r[7]==='act'?'Активен':r[7]==='tmp'?'Временный':'Архив';tr.innerHTML=`<td style="font-weight:700">${r[0]}</td><td style="color:var(--t2)">${r[1]}</td><td style="color:var(--t2)">${r[2]}</td><td><span class="lbadge lb${r[3]}">Ур. ${r[3]}</span></td><td style="color:var(--t2);font-size:10.5px">${r[4]}</td><td style="color:var(--t2)">${r[5]}</td><td style="color:var(--t2)">${r[6]}</td><td class="${sc}">${st}</td>`;rb.appendChild(tr);});
+rt.appendChild(rb);
+
+const RISKS=[
+  ['Инфляция логотипов','Каждая инициатива создаёт логотип','Визуальный хаос','Стоп-факторы + скоринг','Чек-лист + реестр'],
+  ['Ослабление мастер-бренда','Саббренды перетягивают восприятие','Потеря стоимости Билайна','Обязательный endorsement','Правила связи'],
+  ['Визуальный хаос','Разные стили без системы','Снижение доверия','Матрица + библиотека','Design tokens'],
+  ['Орг.структура = бренд','Отдел считает себя брендом','Дублирующие логотипы','Глоссарий + типология','Обучение + глоссарий'],
+  ['Непонятный статус HR-бренда','Функция или бренд?','Бесконтрольный брендинг','Зафиксировать уровень 1','Паспорт уровня 1'],
+  ['Путаница проект/программа/платформа','Неверная классификация','Неверный уровень','Глоссарий + дерево','Типология + дерево'],
+  ['Опора только на внешний контур','«Нас видят — нужен логотип»','Бессмысленные логотипы','Критерии бренд-сущности','Скоринг-модель'],
+  ['Нет правил «при поддержке»','Партнёр выглядит как Билайн','Репутационные риски','Правила модели','Правила + примеры'],
+  ['Нет brand proof для событий','Любое событие берёт платформу','Размывание платформы','Фильтр «За офлайн»','Чек-лист фильтра'],
+  ['Нет правил деактивации','Мёртвые бренды живут годами','Путаница и расходы','Статус «архивный»','Реестр + аудит'],
+  ['Нет владельца','Бренд создан и брошен','Деградация айдентики','Обязательное поле','Карточка сущности'],
+  ['Нет реестра','Невозможно управлять','Дублирование, конфликты','Создать реестр','Реестр сущностей'],
+  ['Конфликт с юридикой','Бренд нарушает права','Правовые риски','Согласование с юристами','Юр. чек-лист'],
+  ['Хаотичные доп. цвета','Каждый придумывает цвета','Визуальная шизофрения','Библиотека дифференциации','Design tokens'],
+  ['Нет правил co-branding','Партнёры доминируют','Потеря видимости','Правила паритета','Co-branding guidelines'],
+  ['Нет правил для digital','Интерфейсы вне системы','UX-хаос','Отдельный раздел','Digital brand guidelines'],
+  ['Нет правил для зонтиков','Зонтик появляется по запросу','Лишние уровни, хаос','Критерии зонтика в дереве','Правила зонтика'],
+  ['Нет правил powered by','Тех. роль выглядит как владение','Неверное восприятие','Правила модели','Правила + примеры'],
+  ['Нет срока пересмотра','Устаревшие бренды не архивируются','Накопление мусора','Дата пересмотра в реестре','Реестр + напоминания'],
+];
+const rkt=document.getElementById('risk-table');rkt.innerHTML='<thead><tr><th>Риск</th><th>Проблема</th><th>Последствие</th><th>Как закрыть</th><th>Артефакт</th></tr></thead>';
+const rkb=document.createElement('tbody');RISKS.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="font-weight:700;color:#C62828">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="badge badge-g">${r[4]}</span></td>`;rkb.appendChild(tr);});rkt.appendChild(rkb);
+
+const PRINCIPLES=[
+  {t:'Логотип — исключение',b:'Брендирование — инструмент управления восприятием, а не административный статус и не реакция на запрос.'},
+  {t:'Структура ≠ бренд',b:'Факт существования отдела, функции или направления не означает права на логотип или саббренд.'},
+  {t:'Каждая сущность усиливает Билайн',b:'Если сущность не добавляет ценности мастер-бренду — её брендирование нецелесообразно.'},
+  {t:'Дифференциация управляема',b:'Уникальность отдельных сущностей возможна только в рамках утверждённой библиотеки атрибутов.'},
+  {t:'Свобода = ответственность',b:'Чем выше самостоятельность — тем выше требования к обоснованию, согласованию и поддержке.'},
+  {t:'Временным не нужен бренд',b:'Если сущность живёт менее года — достаточно шаблонов, плашки и key visual.'},
+  {t:'Внешний контур не создаёт бренд',b:'Внешняя видимость не является основанием для логотипа. Бренд создают роль, УЦП, аудитория и долгосрочность.'},
+  {t:'Есть владелец — есть бренд',b:'Бренд без владельца деградирует. Ответственный назначается до создания айдентики.'},
+  {t:'Бренды пересматриваются',b:'Реестр живёт, сущности архивируются. Ежегодный аудит обязателен.'},
+  {t:'Если есть замена — нет логотипа',b:'Шаблон, плашка, key visual или co-branding-модуль — это не компромисс, а правильное решение.'},
+  {t:'«При поддержке» ≠ собственный проект',b:'Поддержка чужой инициативы не делает её проектом Билайна. Минимальный визуальный след.'},
+  {t:'«За офлайн» — не логотип',b:'«Билайн за офлайн» — смысловой фильтр и brand proof, а не универсальный логотип для всех событий.'},
+];
+const pg=document.getElementById('principles-grid');
+PRINCIPLES.forEach((p,i)=>{const c=document.createElement('div');c.className='pr-card';c.innerHTML=`<div class="pr-n">${String(i+1).padStart(2,'0')}</div><div class="pr-title">${p.t}</div><div class="pr-body">${p.b}</div>`;pg.appendChild(c);});
+
+const PLATFORM=[
+  [1,'Выбирает тип сущности и роль Билайна','Загружает профиль категории','Категория определена','—','—'],
+  [2,'Отвечает на вопросы карточки','Валидирует обязательные поля','Карточка заполнена','—','—'],
+  [3,'Проходит чек-лист стоп-факторов','Проверяет стоп-факторы','Стоп-факторы не обнаружены','—','—'],
+  [4,'Выставляет баллы по скорингу','Считает обязательные + усиливающие','Предварительный уровень','—','—'],
+  [5,'Если мероприятие — проходит brand proof','Проверяет «Билайн за офлайн»','Фильтр пройден / нет','—','—'],
+  [6,'Просматривает рекомендации','Определяет уровень 0–4','Уровень и модель связи','Консультация при уровне 3+','—'],
+  [7,'Просматривает матрицу атрибутов','Выдаёт список разрешённых атрибутов','Что можно использовать','—','—'],
+  [8,'Выбирает шаблоны из библиотеки','Предлагает подходящие шаблоны','Готовые файлы','—','—'],
+  [9,'Видит маршрут согласования','Определяет нужно ли согласование','Маршрут и список подписантов','При уровне 2–4','При уровне 3–4'],
+  [10,'Заполняет заявку в ЦСБ','Формирует PDF-заявку','Заявка готова','Проверяет','Утверждает'],
+  [11,'Ждёт решения','Уведомляет о статусе','Уведомление','Согласует','Утверждает'],
+  [12,'Получает утверждённые файлы','Добавляет сущность в реестр','Запись в реестре','—','Архивирует при деактивации'],
+  [13,'Работает с сущностью','Отслеживает срок пересмотра','Напоминание за 30 дней','—','—'],
+  [14,'Пересматривает или архивирует','Обновляет реестр','Статус обновлён','Участвует','—'],
+  [15,'—','Формирует отчёт по реестру','Аналитика по всем сущностям','—','Стратегический контроль'],
+];
+const pt=document.getElementById('platform-table');pt.innerHTML='<thead><tr><th>#</th><th class="user">Действие пользователя</th><th class="sys">Что делает система</th><th class="result">Результат</th><th class="csb">Бренд-менеджер / ЦСБ</th><th class="csb">Бизнес / Директор</th></tr></thead>';
+const ptb=document.createElement('tbody');PLATFORM.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td class="step-n">${r[0]}</td><td class="user">${r[1]}</td><td class="sys">${r[2]}</td><td class="result">${r[3]}</td><td class="csb">${r[4]}</td><td class="csb">${r[5]}</td>`;ptb.appendChild(tr);});pt.appendChild(ptb);
+
+const ROADMAP=[
+  {phase:'ФАЗА 1',title:'Аудит и классификация',sub:'2–4 недели',steps:[{n:'01',t:'Аудит текущих логотипов и сущностей',a:'Список всех бренд-сущностей'},{n:'02',t:'Классификация по типологии',a:'Таблица с уровнями для каждой сущности'},{n:'03',t:'Выявление конфликтов и дублирований',a:'Список проблемных сущностей'},{n:'04',t:'Первичная версия реестра',a:'Реестр бренд-сущностей v0'}]},
+  {phase:'ФАЗА 2',title:'Методология',sub:'4–6 недель',steps:[{n:'05',t:'Утверждение уровней брендирования',a:'Уровни 0–4 + матрица атрибутов'},{n:'06',t:'Разработка глоссария',a:'Глоссарий 20+ терминов'},{n:'07',t:'Разработка скоринг-модели',a:'Скоринг с 14 критериями'},{n:'08',t:'Разработка decision tree',a:'Дерево решений (15 шагов)'}]},
+  {phase:'ФАЗА 3',title:'Правила и модели',sub:'3–5 недель',steps:[{n:'09',t:'Правила «при поддержке» и «powered by»',a:'Руководство по моделям связи'},{n:'10',t:'Разработка brand proof «Билайн за офлайн»',a:'Фильтр + таблица сценариев'},{n:'11',t:'Разработка правил co-branding',a:'Co-branding guidelines'},{n:'12',t:'Тестирование на реальных кейсах',a:'Отчёт по 10–15 кейсам'}]},
+  {phase:'ФАЗА 4',title:'Инструменты и шаблоны',sub:'6–10 недель',steps:[{n:'13',t:'Библиотека шаблонов',a:'Шаблоны по уровням 0–4'},{n:'14',t:'Библиотека допустимой дифференциации',a:'Design tokens + доп. палитра'},{n:'15',t:'Правила зонтиков и внутренней архитектуры',a:'Правила зонтика'},{n:'16',t:'Упаковка в PDF / брендбук',a:'Бренд-архитектурный документ'}]},
+  {phase:'ФАЗА 5',title:'IT-платформа',sub:'3–6 месяцев',steps:[{n:'17',t:'MVP IT-платформы (анкета + скоринг)',a:'Интерактивная анкета онлайн'},{n:'18',t:'Интеграция с реестром',a:'Реестр в системе'},{n:'19',t:'Запуск процесса согласования и пересмотра',a:'Рабочий процесс + уведомления'}]},
+];
+const rm=document.getElementById('roadmap');
+ROADMAP.forEach(phase=>{
+  const block=document.createElement('div');block.className='rm-phase';
+  block.innerHTML=`<div class="rm-head" onclick="toggleRM(this)"><div class="rm-phase-badge">${phase.phase}</div><div><div class="rm-phase-title">${phase.title}</div><div class="rm-phase-sub">${phase.sub}</div></div><div class="rm-arr">▾</div></div><div class="rm-body"><div class="rm-steps">${phase.steps.map(s=>`<div class="rm-step"><div class="rm-step-num">${s.n}</div><div class="rm-step-title">${s.t}</div><div class="rm-step-art">→ ${s.a}</div></div>`).join('')}</div></div>`;
+  rm.appendChild(block);
+});
+function toggleRM(h){const b=h.nextElementSibling,a=h.querySelector('.rm-arr');b.classList.toggle('open');a.classList.toggle('open');b.style.maxHeight=b.classList.contains('open')?'400px':'0';}
+</script>
+<script>
+(function(){
+  var CORRECT = "beeline2024";
+  function check(){
+    var val = document.getElementById("pw-input").value.trim();
+    if(val === CORRECT){
+      sessionStorage.setItem("bee_auth","1");
+      document.getElementById("pw-screen").style.display="none";
+      document.body.style.overflow="";
+      document.getElementById("pw-error").style.display="none";
+    } else {
+      document.getElementById("pw-error").style.display="block";
+      document.getElementById("pw-input").value="";
+      document.getElementById("pw-input").focus();
+    }
+  }
+  window.checkPw = check;
+  document.addEventListener("DOMContentLoaded",function(){
+    var inp = document.getElementById("pw-input");
+    if(inp) inp.addEventListener("keydown",function(e){if(e.key==="Enter")check();});
+    if(sessionStorage.getItem("bee_auth")==="1"){
+      var s=document.getElementById("pw-screen");
+      if(s) s.style.display="none";
+    } else {
+      document.body.style.overflow="hidden";
+    }
+  });
+})();
+</script>
+</body></html>
